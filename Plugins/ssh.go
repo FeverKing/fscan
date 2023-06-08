@@ -15,27 +15,14 @@ func SshScan(info *common.HostInfo) (tmperr error) {
 	if common.IsBrute {
 		return
 	}
-	starttime := time.Now().Unix()
+	// starttime := time.Now().Unix()
 	for _, user := range common.Userdict["ssh"] {
 		for _, pass := range common.Passwords {
-			pass = strings.Replace(pass, "{user}", user, -1)
-			flag, err := SshConn(info, user, pass)
-			if flag == true && err == nil {
-				return err
-			} else {
-				errlog := fmt.Sprintf("[-] ssh %v:%v %v %v %v", info.Host, info.Ports, user, pass, err)
-				common.LogError(errlog)
-				tmperr = err
-				if common.CheckErrs(err) {
-					return err
-				}
-				if time.Now().Unix()-starttime > (int64(len(common.Userdict["ssh"])*len(common.Passwords)) * common.Timeout) {
-					return err
-				}
-			}
-			if common.SshKey != "" {
-				return err
-			}
+			pass := pass
+			go func() {
+				pass = strings.Replace(pass, "{user}", user, -1)
+				_, _ = SshConn(info, user, pass)
+			}()
 		}
 	}
 	return tmperr
